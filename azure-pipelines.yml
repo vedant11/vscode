@@ -1,23 +1,69 @@
-jobs:
-- job: Windows
-  pool:
-    vmImage: VS2017-Win2016
-  steps:
-  - template: build/azure-pipelines/win32/continuous-build-win32.yml
+# This pipeline is for PRs only
+trigger: none
 
-- job: Linux
-  pool:
-    vmImage: 'Ubuntu-16.04'
-  steps:
-  - template: build/azure-pipelines/linux/continuous-build-linux.yml
+resources:
+  containers:
+    - container: vscode-x64
+      image: vscodehub.azurecr.io/vscode-linux-build-agent:bionic-x64
+      endpoint: VSCodeHub
+      options: --user 0:0
 
-- job: macOS
-  pool:
-    vmImage: macOS-latest
-  steps:
-  - template: build/azure-pipelines/darwin/continuous-build-darwin.yml
+stages:
+  - stage: Compile
+    jobs:
+      - job: Compile
+        pool:
+          vmImage: "Ubuntu-18.04"
+        container: vscode-x64
+        variables:
+          VSCODE_ARCH: x64
+        steps:
+          - template: product-compile.yml
+      - job: Hygiene
+        pool:
+          vmImage: "Ubuntu-18.04"
+        container: vscode-x64
+        variables:
+          VSCODE_ARCH: x64
+        steps:
+          - template: product-hygiene.yml
 
-trigger:
-  branches:
-    exclude:
-    - electron-11.x.y
+  - stage: Windows
+    dependsOn:
+      - Compile
+    pool:
+      vmImage: VS2017-Win2016
+    jobs:
+      - job: Windows
+        timeoutInMinutes: 90
+        variables:
+          VSCODE_ARCH: x64
+        steps:
+          - template: win32/product-build-win32.yml
+
+  - stage: Linux
+    dependsOn:
+      - Compile
+    pool:
+      vmImage: "Ubuntu-18.04"
+    jobs:
+      - job: Linux
+        container: vscode-x64
+        variables:
+          VSCODE_ARCH: x64
+          NPM_ARCH: x64
+        steps:
+          - template: linux/product-build-linux.yml
+
+  - stage: macOS
+    dependsOn:
+      - Compile
+    pool:
+      vmImage: macOS-latest
+    jobs:
+      - job: macOS
+        timeoutInMinutes: 90
+        variables:
+          VSCODE_ARCH: x64
+        steps:
+          - template: darwin/product-build-darwin.yml
