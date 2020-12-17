@@ -18,7 +18,7 @@ stages:
         variables:
           VSCODE_ARCH: x64
         steps:
-          - template: product-compile.yml
+          - template: build/azure-pipelines/product-compile.yml
       - job: Hygiene
         pool:
           vmImage: "Ubuntu-18.04"
@@ -26,7 +26,7 @@ stages:
         variables:
           VSCODE_ARCH: x64
         steps:
-          - template: product-hygiene.yml
+          - template: build/azure-pipelines/product-hygiene.yml
 
   - stage: Windows
     dependsOn:
@@ -39,7 +39,7 @@ stages:
         variables:
           VSCODE_ARCH: x64
         steps:
-          - template: win32/product-build-win32.yml
+          - template: build/azure-pipelines/win32/product-build-win32.yml
 
   - stage: Linux
     dependsOn:
@@ -53,7 +53,7 @@ stages:
           VSCODE_ARCH: x64
           NPM_ARCH: x64
         steps:
-          - template: linux/product-build-linux.yml
+          - template: build/azure-pipelines/linux/product-build-linux.yml
 
   - stage: macOS
     dependsOn:
@@ -66,4 +66,4 @@ stages:
         variables:
           VSCODE_ARCH: x64
         steps:
-          - template: darwin/product-build-darwin.yml
+          - template: build/azure-pipelines/darwin/product-build-darwin.yml
